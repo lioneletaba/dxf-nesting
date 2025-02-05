@@ -29,9 +29,7 @@ To run one of them, just use python followed by the name of the file containing 
 python packer.py
 ```
 
-```
-
-```
+````
 
 ## Running with Docker
 
@@ -44,7 +42,7 @@ mkdir -p data/input data/output
 
 # Copy your DXF files
 cp your-files/*.dxf data/input/e
-```
+````
 
 2. Run the container:
 
