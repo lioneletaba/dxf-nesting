@@ -8,8 +8,8 @@ from ezdxf.addons.drawing.properties import RenderContext
 from ezdxf.addons.drawing.frontend import Frontend
 
 
-INPUT_PATH = "data/input"
-OUTPUT_PATH = "data/output/svg"
+INPUT_PATH = "data/input/dxf"
+OUTPUT_PATH = "data/input/svg"
 
 
 def convert_dxf_to_svg(input_folder, output_folder):
