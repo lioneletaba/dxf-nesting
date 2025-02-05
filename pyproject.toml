@@ -1,0 +1,13 @@
+[project]
+name = "nesting"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "ezdxf>=1.3.5",
+    "nestle-mynest>=2.9.2",
+    "ortools>=9.11.4210",
+    "pyclipper>=1.3.0.post6",
+    "rectpack>=0.2.2",
+]
