@@ -9,6 +9,7 @@ from ezdxf.addons.drawing.frontend import Frontend
 from svg.path import parse_path
 from xml.dom import minidom
 
+
 DXF_PATH = "data/input/dxf"
 SVG_PATH = "data/input/svg"
 
@@ -91,8 +92,18 @@ class FormatConverter:
                     doc = readfile(dxf_path)
 
                     # Create a matplotlib figure
-                    fig = plt.figure()
+                    fig = plt.figure(frameon=False)
                     ax = fig.add_axes((0, 0, 1, 1))
+
+                    # Remove all spacing and margins
+                    ax.set_xticks([])
+                    ax.set_yticks([])
+                    ax.set_xmargin(0)
+                    ax.set_ymargin(0)
+
+                    for spine in ax.spines.values():
+                        spine.set_visible(False)
+
                     ctx = RenderContext(doc)
                     backend = MatplotlibBackend(ax)
                     frontend = Frontend(ctx, backend)
@@ -101,8 +112,31 @@ class FormatConverter:
                     msp = doc.modelspace()
                     frontend.draw_layout(msp, finalize=True)
 
+                    # Get the actual bounds of the content
+                    ax.autoscale()
+                    # ax.autoscale_view(tight=True)
+                    xmin, xmax = ax.get_xlim()
+                    ymin, ymax = ax.get_ylim()
+
+                    bounds = ax.get_window_extent()
+                    # Set the figure size to match content exactly
+                    width = xmax - xmin
+                    height = ymax - ymin
+
+                    # Set figure size in inches
+                    # fig.set_size_inches(bounds.width, bounds.height)
+                    fig.set_size_inches(bounds.width / fig.dpi, bounds.height / fig.dpi)
+                    #
+                    # Adjust figure size to match content bounds
+
                     # Save the figure as an SVG file
-                    fig.savefig(svg_path)
+                    fig.savefig(
+                        svg_path,
+                        bbox_inches="tight",
+                        pad_inches=0,
+                        transparent=True,
+                        format="svg",
+                    )
                     plt.close(fig)
 
                     print(f"Successfully converted {filename} to {svg_filename}")

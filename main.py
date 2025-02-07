@@ -32,7 +32,9 @@ def main():
             files[file_path] = DEFAULT_NUMBER_OF_INSTANCES
 
     # nest in a 2800 x 2000 mm plate, saving to combined.svg
-    SVGPacker.nest(os.path.join(output_svg_path, output_file_name), files, 2800, 2000)
+    SVGPacker.nest(
+        os.path.join(output_svg_path, output_file_name), files, 2800, 2000, False
+    )
     print("SVG Nesting sucessful")
 
     # Convert the nested SVG result into dxf

@@ -17,7 +17,6 @@ from rectpack.maxrects import MaxRectsBaf
 class SVGPacker:
     @staticmethod
     def nest(output, files, wbin, hbin, enclosing_rectangle=True):
-        # packer = newPacker()
         packer = newPacker(
             mode=PackingMode.Offline, pack_algo=MaxRectsBaf, rotation=True
         )
@@ -26,54 +25,67 @@ class SVGPacker:
             return _float2dec(x, 4)
 
         def bbox_paths(paths):
-            bbox = []
-            for p in paths:
+            if not paths:
+                return (0, 0, 0, 0)
+
+            # Initialize bbox with the first path's bounds
+            bbox = paths[0].bbox()
+
+            # Expand bbox to include all other paths
+            for p in paths[1:]:
                 p_bbox = p.bbox()
-                if not bbox:
-                    bbox = p_bbox
-                    print(f"bbox defaulting to p_bbox {bbox}")
-                else:
-                    print(f"bbox {bbox}")
-                    bbox = (
-                        min(p_bbox[0], bbox[0]),
-                        max(p_bbox[1], bbox[1]),
-                        min(p_bbox[2], bbox[2]),
-                        max(p_bbox[3], bbox[3]),
-                    )
+                bbox = (
+                    min(p_bbox[0], bbox[0]),  # xmin
+                    max(p_bbox[1], bbox[1]),  # xmax
+                    min(p_bbox[2], bbox[2]),  # ymin
+                    max(p_bbox[3], bbox[3]),  # ymax
+                )
+
+            # Ensure we don't have any floating point precision issues
             return tuple(float2dec(x) for x in bbox)
 
         all_paths = {}
+        # First pass: collect all paths and compute exact bounding boxes
         for svg in files:
             paths, attributes = svg2paths(svg)
             bbox = bbox_paths(paths)
+
+            # Calculate actual dimensions without padding
+            width = float2dec(bbox[1] - bbox[0])
+            height = float2dec(bbox[3] - bbox[2])
+
             for i in range(files[svg]):
                 rid = svg + str(i)
-                all_paths[rid] = {"paths": paths, "bbox": bbox}
-                print(rid, "Paths", paths)
-                print(f"Adding rect {rid}")
-                packer.add_rect(bbox[1] - bbox[0], bbox[3] - bbox[2], rid=rid)
+                all_paths[rid] = {
+                    "paths": paths,
+                    "bbox": bbox,
+                    "width": width,
+                    "height": height,
+                }
+                packer.add_rect(width, height, rid=rid)
 
+        # Pack rectangles
         print("Rectangle packing...")
         while True:
             packer.add_bin(wbin, hbin)
-            print("added bin")
             packer.pack()
             rectangles = {r[5]: r for r in packer.rect_list()}
             if len(rectangles) == len(all_paths):
                 break
-            else:
-                print("not enough space in the bin, adding ")
+            print("Not enough space in the bin, adding another")
 
         combineds = {}
 
-        print("packing into SVGs...")
+        print("Packing into SVGs...")
         for rid, obj in all_paths.items():
             paths = obj["paths"]
             bbox = obj["bbox"]
-            group = Group()
+            width = obj["width"]
+            height = obj["height"]
 
-            width, height = (float2dec(bbox[1] - bbox[0]), float2dec(bbox[3] - bbox[2]))
             bin, x, y, w, h, _ = rectangles[rid]
+
+            # Create or get the SVG drawing
             if bin not in combineds:
                 svg_file = output
                 if bin != 0:
@@ -88,30 +100,37 @@ class SVGPacker:
                 combineds[bin] = dwg
 
             combined = combineds[bin]
+            group = Group()
 
-            if (
-                (width > height and w > h)
-                or (width < height and w < h)
-                or (width == height and w == h)
-            ):
+            # Determine if rotation is needed
+            needs_rotation = (width > height and w < h) or (width < height and w > h)
+
+            if needs_rotation:
+                # Apply rotation transformation
+                rotate = 90
+                dx = -bbox[2]  # Use y-min as x-offset
+                dy = -bbox[0]  # Use x-min as y-offset
+                # Center the rotation
+                group.translate(x + height / 2, y + width / 2)
+                group.rotate(rotate, (0, 0))
+                group.translate(-height / 2, -width / 2)
+            else:
+                # No rotation needed
                 rotate = 0
                 dx = -bbox[0]
                 dy = -bbox[2]
-            else:
-                rotate = 90
-                dx = -bbox[2]
-                dy = -bbox[0]
+                group.translate(x + dx, y + dy)
 
+            # Add paths to group
             for p in paths:
                 path = Path(d=p.d())
                 path.stroke(color="red", width="1")
                 path.fill(opacity=0)
                 group.add(path)
 
-            group.translate(x + dx, y + dy)
-            group.rotate(rotate)
             combined.add(group)
 
+        # Save all SVGs
         for combined in combineds.values():
             if enclosing_rectangle:
                 r = Rect(size=(wbin, hbin))
