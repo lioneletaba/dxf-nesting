@@ -10,6 +10,7 @@ dependencies = [
     "ortools>=9.11.4210",
     "pyclipper>=1.3.0.post6",
     "rectpack>=0.2.2",
+    "svg-path>=6.3",
     "svgpathtools>=1.6.1",
     "svgwrite>=1.4.3",
 ]
