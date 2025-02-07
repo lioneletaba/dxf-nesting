@@ -1,20 +1,24 @@
 # DXF Nesting Application
 
-This application processes DXF files for nesting shapes efficiently. It reads DXF files from an input directory, performs nesting operations, and outputs the result to a DXF file.
+This application processes DXF files for nesting shapes efficiently.
+It reads DXF files from an input directory, converts those files to SVG format,
+then performs nesting operations, and outputs the result to a DXF file.
 
-## Project Structure
+# Project Structure
 
 ## Data Directory Structure
 
-The application uses a `data` directory that must be organized as follows:
+The application uses a `examples` directory that must be organized as follows:
 
-### Input Directory (`data/input/`)
+### Input Directory (`examples/input/dxf`)
 
 - Place all your DXF files that need to be nested in this directory
 - Supported file types: `.dxf`
 - All files in this directory will be processed together
 
-### Output Directory (`data/output/`)
+### Output Directory (`examples/output/{file_type}`)
+
+_file_type_ can be svg or dxf
 
 - The nested result will be saved here as `output.dxf`
 - Created automatically if it doesn't exist
@@ -26,7 +30,7 @@ There are multiple implementations of the nesting algorithm at the root of the P
 To run one of them, just use python followed by the name of the file containing the implementation you want to run
 
 ```bash
-python packer.py
+python main.py
 ```
 
 ````
@@ -38,16 +42,16 @@ python packer.py
 
 ```bash
 # Create required directories
-mkdir -p data/input data/output
+mkdir -p examples/input examples/output
 
 # Copy your DXF files
-cp your-files/*.dxf data/input/e
+cp your-files/*.dxf examples/input/e
 ````
 
 2. Run the container:
 
 ```bash
-docker run -v "$(pwd)/data:/app/data" nesting-app:latest
+docker run -v "$(pwd)/examples:/app/examples" nesting-app:latest
 ```
 
-### The result of the nesting will be a dxf file in the data/output folder
+### The result of the nesting will be a dxf file in the examples/output/dxf folder

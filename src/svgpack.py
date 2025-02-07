@@ -49,7 +49,6 @@ class SVGPacker:
             for i in range(files[svg]):
                 rid = svg + str(i)
                 all_paths[rid] = {"paths": paths, "bbox": bbox}
-                print(rid, "Paths", paths)
                 print(f"Adding rect {rid}")
                 packer.add_rect(bbox[1] - bbox[0], bbox[3] - bbox[2], rid=rid)
 
@@ -119,5 +118,5 @@ class SVGPacker:
                 r.stroke(color="lightgray")
                 combined.add(r)
 
-            print("SVG saving...")
+            print("Saving SVG...")
             combined.save(pretty=True)
